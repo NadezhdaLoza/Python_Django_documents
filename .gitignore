@@ -27,3 +27,5 @@ Thumbs.db
 # Статика и медиа 
 staticfiles/
 media/
+
+replacements.txt
