@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% block title %}Редактирование приказа{% endblock %}
+{% block content %}
+<div class="row valign-wrapper not-print">
+  <h4 class="col s10">Редактирование приказа о перемещении работников №{{ object.document_number }}</h4>
+  <div class="col s2 right-align">
+    <button class="btn-floating z-depth-0 waves-effect waves-light" onclick="printOrderForm()">
+      <i class="material-icons green">print</i>
+    </button>
+  </div>
+</div>
+
+<form method="post" id="order-form">
+  {% csrf_token %}
+  
+  <div class="row">
+    <div class="input-field col s6">
+      {{ form.organization }}
+      <label>Организация</label>
+      {{ form.organization.errors }}
+    </div>
+    <div class="input-field col s3">
+      {{ form.document_number }}
+      <label class="active">Номер документа</label>
+      {{ form.document_number.errors }}
+    </div>
+    <div class="input-field col s3">
+      {{ form.document_date }}
+      <label class="active">Дата составления</label>
+      {{ form.document_date.errors }}
+    </div>
+  </div>
+
+  <h5 class="not-print">Работники</h5>
+  <div class="not-print" style="margin-bottom: 10px;">
+      <button type="button" id="add-row-btn" class="btn green waves-effect">
+          <i class="material-icons left">add</i>Добавить строку
+      </button>
+  </div>
+
+  {{ formset.management_form }}
+  <div style="overflow-x: auto;">
+      <table class="highlight" id="items-table">
+        <thead class="not-print">
+          <tr>
+            <th>Фамилия_Имя_Отчество</th>
+            <th>Табельный_номер </th>
+            <th>Подразделение_(прежнее)</th>
+            <th>Подразделение_(новое)</th>
+            <th>Должность_(прежняя)</th>
+            <th>Должность_(новая)</th>
+            <th>Оклад_(прежний)</th>
+            <th>Оклад_(новый)</th>
+            <th>Вид_перевода</th>
+            <th>С</th>
+            <th>По</th>
+            <th>Основание</th>
+            <th>Дата осн.</th>
+            <th class="not-print">Удалить</th>
+          </tr>
+        </thead>
+        <tbody id="formset-body">
+          {% for f in formset %}
+          <tr class="formset-row">
+            <td>{{ f.employee }}{{ f.employee.errors }}</td>
+            <td>{{ f.tab_number }}{{ f.tab_number.errors }}</td>
+            <td>{{ f.old_department }}{{ f.old_department.errors }}</td>
+            <td>{{ f.new_department }}{{ f.new_department.errors }}</td>
+            <td>{{ f.old_position }}{{ f.old_position.errors }}</td>
+            <td>{{ f.new_position }}{{ f.new_position.errors }}</td>
+            <td>{{ f.old_salary }}{{ f.old_salary.errors }}</td>
+            <td>{{ f.new_salary }}{{ f.new_salary.errors }}</td>
+            <td>{{ f.transfer_type }}{{ f.transfer_type.errors }}</td>
+            <td>{{ f.date_from }}{{ f.date_from.errors }}</td>
+            <td>{{ f.date_to }}{{ f.date_to.errors }}</td>
+            <td>{{ f.basis_document }}{{ f.basis_document.errors }}</td>
+            <td>{{ f.basis_date }}{{ f.basis_date.errors }}</td>
+            <td class="not-print">
+              {% if formset.can_delete %}
+                {{ f.DELETE }}
+                <label><input type="checkbox" /><span>Удалить</span></label>
+              {% endif %}
+              {{ f.id }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+  </div>
+
+  <div class="row not-print">
+    <div class="col s12 right-align">
+      <button class="btn waves-effect blue" type="submit">
+        <i class="material-icons left">save</i>Сохранить
+      </button>
+      <a href="{% url 'orders:view' object.pk %}" class="btn grey lighten-1 black-text">
+        <i class="material-icons left">visibility</i>Просмотр
+      </a>
+      <a href="{% url 'orders:list' %}" class="btn grey">
+        <i class="material-icons left">cancel</i>Отмена
+      </a>
+    </div>
+  </div>
+</form>
+<div id="print-preview" class="print-only" style="display: none;">
+    <div class="print-header">
+        <div id="print-org-name"></div>
+        <h5>ПРИКАЗ (распоряжение)<br>о переводе работников на другую работу</h5>
+        <div>Унифицированная форма № Т-5а</div>
+    </div>
+
+    <div class="print-info-row">
+        <div>Номер документа: <b id="print-doc-num"></b></div>
+        <div>Дата составления: <b id="print-doc-date"></b></div>
+    </div>
+
+    <p><b>Перевести на другую работу:</b></p>
+
+    <table class="print-table">
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Таб. №</th>
+                <th>Прежн. подр.</th>
+                <th>Новое подр.</th>
+                <th>Прежн. должн.</th>
+                <th>Новая должн.</th>
+                <th>Прежн. оклад</th>
+                <th>Новый оклад</th>
+                <th>Вид</th>
+                <th>С</th>
+                <th>По</th>
+                <th>Основание</th>
+                <th>Дата осн.</th>
+            </tr>
+        </thead>
+        <tbody id="print-items"></tbody>
+    </table>
+
+    <div class="print-signatures">
+        <p>Руководитель организации: ____________________ / <span id="print-chief"></span> /</p>
+        <p style="margin-top: 20px;"><i>С приказом работники ознакомлены.</i></p>
+    </div>
+</div>
+
+<style>
+@media print {
+    body * { visibility: hidden; }
+    .print-only, .print-only * { visibility: visible; }
+    .print-only {
+        position: absolute;
+        left: 0; top: 0;
+        width: 100%;
+        display: block !important;
+        padding: 20px;
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+    }
+    .not-print { display: none !important; }
+    nav.navbar, .sidenav { display: none !important; }
+    main { margin-left: 0 !important; }
+    .print-header { text-align: center; margin-bottom: 20px; }
+    .print-info-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .print-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    .print-table th, .print-table td { border: 1px solid #000; padding: 4px; text-align: center; }
+    .print-signatures { margin-top: 40px; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    M.FormSelect.init(document.querySelectorAll('select'));
+    M.Datepicker.init(document.querySelectorAll('.datepicker'), { format: 'dd.mm.yyyy' });
+
+    var prefix = '{{ formset.prefix }}';
+    var totalFormsInput = document.getElementById('id_' + prefix + '-TOTAL_FORMS');
+    var tbody = document.querySelector('#items-table tbody');
+    var addBtn = document.getElementById('add-row-btn');
+
+    // Логика удаления (синхронизация чекбоксов)
+    if (tbody) {
+        tbody.addEventListener('change', function(e) {
+            var cb = e.target;
+            if (!cb.matches('input[type="checkbox"]')) return;
+            var row = cb.closest('.formset-row');
+            if (!row) return;
+            var del = row.querySelector('input[name$="-DELETE"]');
+            if (!del) return;
+            if (cb !== del) del.checked = cb.checked;
+            row.style.display = del.checked ? 'none' : '';
+        });
+    }
+
+    // Логика добавления строк
+    if (addBtn && totalFormsInput && tbody) {
+        addBtn.addEventListener('click', function() {
+            var formCount = parseInt(totalFormsInput.value);
+            var rows = tbody.querySelectorAll('.formset-row');
+            if (rows.length === 0) return;
+
+            var newRow = rows[rows.length - 1].cloneNode(true);
+
+            // Очистка Materialize обёрток (fix для дублирования селектов)
+            newRow.querySelectorAll('.select-wrapper').forEach(function(w) {
+                var sel = w.querySelector('select');
+                w.parentNode.replaceChild(sel, w);
+            });
+
+            // Замена индексов формсета
+            var regex = new RegExp(prefix + '-\\d+', 'g');
+            newRow.innerHTML = newRow.innerHTML.replace(regex, prefix + '-' + formCount);
+
+            // Сброс значений полей
+            newRow.querySelectorAll('select').forEach(function(s) { s.selectedIndex = 0; });
+            newRow.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"])').forEach(function(i) { i.value = ''; });
+            newRow.querySelectorAll('input[type="checkbox"]').forEach(function(c) { c.checked = false; });
+            newRow.querySelectorAll('input[type="hidden"][name$="-id"]').forEach(function(h) { h.value = ''; });
+            
+            // Сброс скрытия строки
+            newRow.style.display = '';
+
+            tbody.appendChild(newRow);
+            totalFormsInput.value = formCount + 1;
+
+            // Повторная инициализация Materialize для новой строки
+            M.FormSelect.init(newRow.querySelectorAll('select'));
+        });
+    }
+});
+function printOrderForm() {
+    function getMSelectValue(selectElement) {
+        if (!selectElement) return '';
+        const wrapper = selectElement.closest('.select-wrapper');
+        if (wrapper) {
+            const input = wrapper.querySelector('input.select-dropdown');
+            if (input) return input.value;
+        }
+        return selectElement.options[selectElement.selectedIndex] ? selectElement.options[selectElement.selectedIndex].text : '';
+    }
+
+    function getInputValue(inputElement) {
+        return inputElement ? inputElement.value : '';
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return isNaN(date) ? dateString : date.toLocaleDateString('ru-RU');
+    }
+
+    const orgSelect = document.getElementById('id_organization');
+    document.getElementById('print-org-name').textContent = getMSelectValue(orgSelect);
+
+    document.getElementById('print-doc-num').textContent = getInputValue(document.getElementById('id_document_number'));
+    
+    const docDateInput = document.getElementById('id_document_date');
+    document.getElementById('print-doc-date').textContent = formatDate(getInputValue(docDateInput));
+
+    const printTbody = document.getElementById('print-items');
+    printTbody.innerHTML = '';
+
+    const rows = document.querySelectorAll('#items-table .formset-row');
+    
+    rows.forEach((row) => {
+        if (row.style.display === 'none') return;
+
+        const empSelect = row.querySelector('select[name$="-employee"]');
+        const tabInput = row.querySelector('input[name$="-tab_number"]');
+        const oldDeptSelect = row.querySelector('select[name$="-old_department"]');
+        const newDeptSelect = row.querySelector('select[name$="-new_department"]');
+        const oldPosSelect = row.querySelector('select[name$="-old_position"]');
+        const newPosSelect = row.querySelector('select[name$="-new_position"]');
+        const oldSalInput = row.querySelector('input[name$="-old_salary"]');
+        const newSalInput = row.querySelector('input[name$="-new_salary"]');
+        const typeSelect = row.querySelector('select[name$="-transfer_type"]');
+        const dateFromInput = row.querySelector('input[name$="-date_from"]');
+        const dateToInput = row.querySelector('input[name$="-date_to"]');
+        const basisDocInput = row.querySelector('input[name$="-basis_document"]');
+        const basisDateInput = row.querySelector('input[name$="-basis_date"]');
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${getMSelectValue(empSelect)}</td>
+            <td>${getInputValue(tabInput)}</td>
+            <td>${getMSelectValue(oldDeptSelect)}</td>
+            <td>${getMSelectValue(newDeptSelect)}</td>
+            <td>${getMSelectValue(oldPosSelect)}</td>
+            <td>${getMSelectValue(newPosSelect)}</td>
+            <td>${getInputValue(oldSalInput)}</td>
+            <td>${getInputValue(newSalInput)}</td>
+            <td>${getMSelectValue(typeSelect)}</td>
+            <td>${formatDate(getInputValue(dateFromInput))}</td>
+            <td>${formatDate(getInputValue(dateToInput))}</td>
+            <td>${getInputValue(basisDocInput)}</td>
+            <td>${formatDate(getInputValue(basisDateInput))}</td>
+        `;
+        printTbody.appendChild(tr);
+    });
+
+    const preview = document.getElementById('print-preview');
+    preview.style.display = 'block';
+    
+    setTimeout(() => {
+        window.print();
+        preview.style.display = 'none';
+    }, 100);
+}
+</script>
+{% endblock %}

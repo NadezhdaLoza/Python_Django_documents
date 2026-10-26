@@ -1,0 +1,29 @@
+# Виртуальное окружение
+venv/
+.env
+.venv/
+
+# Байт-код Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Миграции
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Локальные настройки и секреты
+local_settings.py
+db.sqlite3
+*.log
+
+# IDE и ОС
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Статика и медиа 
+staticfiles/
+media/

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Удаление приказа о перемещении работников{% endblock %}
+{% block content %}
+<h4>Удалить приказ №{{ object.document_number }}?</h4>
+<form method="post">
+  {% csrf_token %}
+  <p>Вы уверены, что хотите удалить приказ о перемещении от {{ object.document_date|date:"d.m.Y" }}?</p>
+  <button class="btn red waves-effect">
+    <i class="material-icons left">delete</i>Удалить
+  </button>
+  <a href="{% url 'orders:list' %}" class="btn grey waves-effect">
+    <i class="material-icons left">cancel</i>Отмена
+  </a>
+</form>
+{% endblock %}

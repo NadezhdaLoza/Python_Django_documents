@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Система документов{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- CSS -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="{% static 'css/materialize.min.css' %}" rel="stylesheet">
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+
+  <!-- БИБЛИОТЕКИ ПЕРЕНЕСЕНЫ В HEAD -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://raw.githubusercontent.com/elo80ka/django-dynamic-formset/master/src/jquery.formset.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/django-dynamic-formset/1.2.0/jquery.formset.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</head>
+
+<body class="grey lighten-4 has-fixed-sidenav">
+  {% include 'includes/_sidenav.html' %}
+  {% include 'includes/_navbar.html' %}
+
+  <main class="section">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Единая инициализация Materialize ПОСЛЕ контента -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      M.AutoInit();
+      var selects = document.querySelectorAll('select');
+      if (selects.length) M.FormSelect.init(selects);
+    });
+  </script>
+</body>
+</html>

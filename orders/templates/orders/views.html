@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Приказ №{{ order.document_number }}</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; padding: 20px; font-size: 12pt; }
+        .header { text-align: center; margin-bottom: 20px; }
+        table.main { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 10pt; }
+        table.main th, table.main td { border: 1px solid black; padding: 5px; text-align: center; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .no-print { text-align: center; margin-top: 30px; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>{{ order.organization.name }}</div>
+        <h3>ПРИКАЗ (распоряжение)<br>о переводе работников на другую работу</h3>
+        <div>Унифицированная форма № Т-5а</div>
+    </div>
+
+    <div class="info-row">
+        <div>Номер документа: <b>{{ order.document_number }}</b></div>
+        <div>Дата составления: <b>{{ order.document_date|date:"d.m.Y" }}</b></div>
+    </div>
+
+    <p><b>Перевести на другую работу:</b></p>
+
+    <table class="main">
+        <thead>
+            <tr>
+                <th rowspan="2">ФИО</th>
+                <th rowspan="2">Таб. №</th>
+                <th colspan="2">Структурное подразделение</th>
+                <th colspan="2">Должность</th>
+                <th colspan="2">Тарифная ставка (оклад), руб.</th>
+                <th rowspan="2">Вид перевода</th>
+                <th colspan="2">Период</th>
+                <th colspan="2">Основание</th>
+            </tr>
+            <tr>
+                <th>прежнее</th>
+                <th>новое</th>
+                <th>прежняя</th>
+                <th>новая</th>
+                <th>прежняя</th>
+                <th>новая</th>
+                <th>с</th>
+                <th>по</th>
+                <th>номер</th>
+                <th>дата</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.employee }}</td>
+                <td>{{ item.tab_number }}</td>
+                <td>{{ item.old_department.name }}</td>
+                <td>{{ item.new_department.name }}</td>
+                <td>{{ item.old_position.name }}</td>
+                <td>{{ item.new_position.name }}</td>
+                <td>{{ item.old_salary }}</td>
+                <td>{{ item.new_salary }}</td>
+                <td>{{ item.get_transfer_type_display }}</td>
+                <td>{{ item.date_from|date:"d.m.Y" }}</td>
+                <td>{{ item.date_to|date:"d.m.Y"|default:"—" }}</td>
+                <td>{{ item.basis_document }}</td>
+                <td>{{ item.basis_date|date:"d.m.Y" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 40px;">
+        <p>Руководитель организации: ____________________ / {{ order.organization.chief }} /</p>
+        <p style="margin-top: 20px;"><i>С приказом работники ознакомлены.</i></p>
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #2196f3; color: white; border: none; cursor: pointer;">
+            Печать приказа
+        </button>
+    </div>
+</body>
+</html>
